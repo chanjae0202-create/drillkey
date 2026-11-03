@@ -1,0 +1,31 @@
+{
+  "name": "강의자료 열쇠함",
+  "short_name": "열쇠함",
+  "description": "잠긴 강의자료 PDF를 등록한 암호로 한 번에 풀어 저장합니다.",
+  "lang": "ko",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#e7edf1",
+  "theme_color": "#0a6470",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

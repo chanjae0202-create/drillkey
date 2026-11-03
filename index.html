@@ -1,0 +1,1415 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>강의자료 열쇠함</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a6470">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* 레이아웃: 왼쪽은 작업대(파일 투입구와 결과), 오른쪽은 열쇠고리처럼 꼬리표가 매달린 열쇠함 */
+:root {
+  --bg: #e7edf1; --panel: #fbfcfd; --line: #c9d4dc; --ink: #14232e; --muted: #526473;
+  --accent: #0a6470; --accent-ink: #ffffff; --accent-soft: #d6e9ec;
+  --brass: #8a5c0c; --tag: #f5e7c6; --tag-line: #d9bf85;
+  --ok: #17693f; --ok-soft: #d9efe2; --bad: #a82a20; --bad-soft: #f8dfdc; --quiet-soft: #e4e9ed;
+  --display: "Do Hyeon", "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f171d; --panel: #172229; --line: #2c3c47; --ink: #e5edf2; --muted: #9db0be;
+  --accent: #5cc6d2; --accent-ink: #06262b; --accent-soft: #173a41;
+  --brass: #e4b75c; --tag: #33291a; --tag-line: #6b5427;
+  --ok: #6fd6a0; --ok-soft: #173a2a; --bad: #ff9a90; --bad-soft: #43201d; --quiet-soft: #24313a; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #0f171d; --panel: #172229; --line: #2c3c47; --ink: #e5edf2; --muted: #9db0be;
+  --accent: #5cc6d2; --accent-ink: #06262b; --accent-soft: #173a41;
+  --brass: #e4b75c; --tag: #33291a; --tag-line: #6b5427;
+  --ok: #6fd6a0; --ok-soft: #173a2a; --bad: #ff9a90; --bad-soft: #43201d; --quiet-soft: #24313a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--body); word-break: keep-all; overflow-wrap: anywhere; padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 22px; }
+header { display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: baseline; }
+h1 { font: 400 34px/1.15 var(--display); margin: 0; letter-spacing: .01em; }
+header p { margin: 0; color: var(--muted); }
+.board { display: grid; grid-template-columns: minmax(0, 1fr) 316px; gap: 22px; align-items: start; }
+.bench { display: grid; gap: 16px; min-width: 0; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; border: 1px solid var(--line); background: var(--panel); border-radius: 7px; padding: 7px 12px; font-weight: 500; }
+button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.primary:hover:not(:disabled) { color: var(--accent-ink); filter: brightness(1.1); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.drop { border: 2px dashed var(--line); border-radius: 12px; background: var(--panel); padding: 26px 20px; display: grid; justify-items: center; gap: 10px; text-align: center; transition: border-color .12s, background .12s; }
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop strong { font: 400 22px/1.25 var(--display); }
+.drop span { color: var(--muted); font-size: 14px; }
+
+.tray { display: grid; gap: 10px; min-width: 0; }
+.tray-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; min-height: 38px; }
+.tally { font-weight: 600; margin-right: auto; font-variant-numeric: tabular-nums; }
+.rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; }
+.row.sample { opacity: .72; border-style: dashed; }
+.lock { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--quiet-soft); color: var(--muted); }
+.lock svg { width: 18px; height: 18px; display: block; }
+.row[data-s="done"] .lock { background: var(--ok-soft); color: var(--ok); }
+.row[data-s="wrong"] .lock, .row[data-s="error"] .lock { background: var(--bad-soft); color: var(--bad); }
+.row[data-s="working"] .lock { animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .row[data-s="working"] .lock { animation: none; } }
+.meta { min-width: 0; }
+.fname { font-weight: 500; overflow-wrap: anywhere; }
+.state { font-size: 13.5px; color: var(--muted); }
+.row[data-s="done"] .state b { color: var(--ok); font-weight: 600; }
+.row[data-s="wrong"] .state b, .row[data-s="error"] .state b { color: var(--bad); font-weight: 600; }
+.acts { display: flex; gap: 6px; }
+.acts button { padding: 5px 10px; font-size: 14px; }
+.chip { font-size: 12px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; letter-spacing: .02em; }
+.example-note { color: var(--muted); font-size: 13.5px; margin: 0; }
+
+.ring { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.ring h2 { font: 400 22px/1.2 var(--display); margin: 0; display: flex; justify-content: space-between; align-items: baseline; }
+.ring h2 small { font: 500 13px var(--body); color: var(--muted); font-variant-numeric: tabular-nums; }
+form { display: grid; gap: 8px; }
+label { display: grid; gap: 3px; font-size: 13px; font-weight: 500; color: var(--muted); }
+input[type=text] { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); font-size: 15px; }
+input#kPw { font-family: var(--mono); }
+.form-msg { font-size: 13px; color: var(--bad); min-height: 0; margin: 0; }
+.tags { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.tag { position: relative; background: var(--tag); border: 1px solid var(--tag-line); border-radius: 4px 8px 8px 4px; padding: 8px 10px 8px 32px; display: grid; gap: 2px; min-width: 0; }
+.tag::before { content: ""; position: absolute; left: 11px; top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; background: var(--panel); border: 1.5px solid var(--brass); }
+.tag-top { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; min-width: 0; }
+.tag-name { font-weight: 600; overflow-wrap: anywhere; min-width: 0; }
+.tag-hits { font-size: 12.5px; color: var(--brass); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tag-pw { font: 500 13.5px var(--mono); overflow-wrap: anywhere; color: var(--muted); }
+.tag-acts { display: flex; gap: 12px; }
+.link { border: 0; background: none; padding: 0; font-size: 13px; color: var(--brass); text-decoration: underline; text-underline-offset: 2px; font-weight: 500; }
+.link:hover:not(:disabled) { color: var(--ink); }
+.link.armed { color: var(--bad); font-weight: 600; }
+.empty-keys { color: var(--muted); font-size: 14px; margin: 0; }
+.ring-foot { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
+.ring-foot div { display: flex; gap: 14px; flex-wrap: wrap; }
+.ring-foot .link { color: var(--accent); }
+.fine { color: var(--muted); font-size: 12.5px; margin: 0; }
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-weight: 500; max-width: calc(100vw - 32px); }
+@media (max-width: 820px) {
+  .board { grid-template-columns: minmax(0, 1fr); }
+  h1 { font-size: 30px; }
+}
+@media (max-width: 460px) {
+  .row { grid-template-columns: 34px minmax(0, 1fr); }
+  .acts { grid-column: 2; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>강의자료 열쇠함</h1>
+    <p>잠긴 PDF를 넣으면 등록한 암호를 알아서 대입해 풀어 줍니다.</p>
+  </header>
+  <div class="board">
+    <main class="bench">
+      <div class="drop" id="drop">
+        <strong>잠긴 PDF를 여기에 끌어다 놓으세요</strong>
+        <span>여러 파일을 한 번에 넣을 수 있습니다</span>
+        <button class="primary" id="pick" type="button">PDF 선택</button>
+        <input id="file" type="file" accept="application/pdf,.pdf" multiple hidden>
+      </div>
+      <section class="tray" aria-label="처리 결과">
+        <div class="tray-head" id="trayHead" hidden>
+          <span class="tally" id="tally" aria-live="polite"></span>
+          <button id="saveAll" class="primary" type="button"></button>
+          <button id="clear" type="button">목록 비우기</button>
+        </div>
+        <p class="example-note" id="exampleNote">파일을 넣으면 아래처럼 표시됩니다.</p>
+        <ul class="rows" id="rows"></ul>
+      </section>
+    </main>
+    <aside class="ring" aria-label="열쇠함">
+      <h2>열쇠함 <small id="keyCount"></small></h2>
+      <form id="keyForm" autocomplete="off">
+        <label>과목명 <input id="kLabel" type="text" placeholder="운영체제" maxlength="40" autocomplete="off"></label>
+        <label>암호 <input id="kPw" type="text" placeholder="교수님이 정한 암호" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+        <p class="form-msg" id="formMsg" hidden></p>
+        <button class="primary" type="submit">열쇠 추가</button>
+      </form>
+      <ul class="tags" id="tags"></ul>
+      <p class="empty-keys" id="noKeys">아직 열쇠가 없습니다. 과목별 암호를 위에 등록하면 다음부터는 PDF만 넣으면 됩니다.</p>
+      <div class="ring-foot">
+        <div>
+          <button class="link" id="backup" type="button">백업 저장</button>
+          <button class="link" id="restore" type="button">백업 불러오기</button>
+          <input id="restoreFile" type="file" accept=".json,application/json" hidden>
+        </div>
+        <p class="fine" id="privacy">PDF와 암호는 이 브라우저 안에서만 처리되고 밖으로 전송되지 않습니다. 열쇠는 이 기기의 이 브라우저에 저장되므로, 다른 기기에서는 백업 파일을 불러오세요. 백업 파일에는 암호가 그대로 들어 있습니다.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+<div id="toast" role="status" hidden></div>
+
+<script>
+/* PDF 표준 보안 처리기 복호화 엔진. 외부 라이브러리 없이 브라우저 안에서만 동작한다.
+   지원: RC4 40/128비트(R2-R4), AES-128(R4), AES-256(R5, R6). */
+const PDFUnlock = (() => {
+  /* ---------- 바이트 도우미 ---------- */
+  const cat = (...parts) => {
+    let n = 0;
+    for (const p of parts) n += p.length;
+    const out = new Uint8Array(n);
+    let i = 0;
+    for (const p of parts) { out.set(p, i); i += p.length; }
+    return out;
+  };
+  const ascii = s => { const o = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) o[i] = s.charCodeAt(i) & 255; return o; };
+  const latin1 = b => { let s = ''; for (let i = 0; i < b.length; i += 32768) s += String.fromCharCode.apply(null, b.subarray(i, i + 32768)); return s; };
+  const utf8 = s => new TextEncoder().encode(s);
+  const eq = (a, b, n) => { for (let i = 0; i < n; i++) if (a[i] !== b[i]) return false; return true; };
+  const indexOf = (b, pat, from = 0, to = b.length) => {
+    const p = ascii(pat), last = Math.min(to, b.length) - p.length;
+    outer: for (let i = from; i <= last; i++) {
+      if (b[i] !== p[0]) continue;
+      for (let j = 1; j < p.length; j++) if (b[i + j] !== p[j]) continue outer;
+      return i;
+    }
+    return -1;
+  };
+  const lastIndexOf = (b, pat, from = b.length - 1) => {
+    const p = ascii(pat);
+    outer: for (let i = Math.min(from, b.length - p.length); i >= 0; i--) {
+      for (let j = 0; j < p.length; j++) if (b[i + j] !== p[j]) continue outer;
+      return i;
+    }
+    return -1;
+  };
+
+  /* ---------- 해시와 암호 ---------- */
+  const MD5_S = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
+  const MD5_K = new Int32Array(64);
+  for (let i = 0; i < 64; i++) MD5_K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296) | 0;
+
+  function md5(data) {
+    const n = data.length, padded = new Uint8Array(((n + 8) >> 6) * 64 + 64);
+    padded.set(data);
+    padded[n] = 0x80;
+    const dv = new DataView(padded.buffer);
+    dv.setUint32(padded.length - 8, (n * 8) >>> 0, true);
+    dv.setUint32(padded.length - 4, Math.floor(n / 536870912), true);
+    let a0 = 0x67452301, b0 = 0xefcdab89 | 0, c0 = 0x98badcfe | 0, d0 = 0x10325476;
+    const M = new Int32Array(16);
+    for (let off = 0; off < padded.length; off += 64) {
+      for (let i = 0; i < 16; i++) M[i] = dv.getInt32(off + i * 4, true);
+      let a = a0, b = b0, c = c0, d = d0;
+      for (let i = 0; i < 64; i++) {
+        let f, g;
+        const r = i >> 4;
+        if (r === 0) { f = (b & c) | (~b & d); g = i; }
+        else if (r === 1) { f = (d & b) | (~d & c); g = (5 * i + 1) & 15; }
+        else if (r === 2) { f = b ^ c ^ d; g = (3 * i + 5) & 15; }
+        else { f = c ^ (b | ~d); g = (7 * i) & 15; }
+        const t = (a + f + MD5_K[i] + M[g]) | 0, s = MD5_S[(r << 2) | (i & 3)];
+        a = d; d = c; c = b;
+        b = (b + ((t << s) | (t >>> (32 - s)))) | 0;
+      }
+      a0 = (a0 + a) | 0; b0 = (b0 + b) | 0; c0 = (c0 + c) | 0; d0 = (d0 + d) | 0;
+    }
+    const out = new Uint8Array(16), odv = new DataView(out.buffer);
+    odv.setInt32(0, a0, true); odv.setInt32(4, b0, true); odv.setInt32(8, c0, true); odv.setInt32(12, d0, true);
+    return out;
+  }
+
+  function rc4(key, data) {
+    const S = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) S[i] = i;
+    for (let i = 0, j = 0; i < 256; i++) {
+      j = (j + S[i] + key[i % key.length]) & 255;
+      const t = S[i]; S[i] = S[j]; S[j] = t;
+    }
+    const out = new Uint8Array(data.length);
+    for (let n = 0, i = 0, j = 0; n < data.length; n++) {
+      i = (i + 1) & 255;
+      const t = S[i];
+      j = (j + t) & 255;
+      S[i] = S[j]; S[j] = t;
+      out[n] = data[n] ^ S[(S[i] + t) & 255];
+    }
+    return out;
+  }
+
+  /* AES: 표 기반 구현. WebCrypto는 패딩이 틀린 PDF에서 실패하고 문자열마다 비동기 호출이 필요해 쓰지 않는다. */
+  const SB = new Uint8Array(256), ISB = new Uint8Array(256);
+  const T0 = new Uint32Array(256), T1 = new Uint32Array(256), T2 = new Uint32Array(256), T3 = new Uint32Array(256);
+  const D0 = new Uint32Array(256), D1 = new Uint32Array(256), D2 = new Uint32Array(256), D3 = new Uint32Array(256);
+  (() => {
+    const d = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) d[i] = i < 128 ? i << 1 : (i << 1) ^ 0x11b;
+    let x = 0, xi = 0;
+    for (let i = 0; i < 256; i++) {
+      let sx = xi ^ (xi << 1) ^ (xi << 2) ^ (xi << 3) ^ (xi << 4);
+      sx = (sx >>> 8) ^ (sx & 255) ^ 0x63;
+      SB[x] = sx; ISB[sx] = x;
+      const x2 = d[x], x4 = d[x2], x8 = d[x4];
+      let t = (d[sx] * 0x101) ^ (sx * 0x1010100);
+      T0[x] = (t << 24) | (t >>> 8); T1[x] = (t << 16) | (t >>> 16); T2[x] = (t << 8) | (t >>> 24); T3[x] = t;
+      t = (x8 * 0x1010101) ^ (x4 * 0x10001) ^ (x2 * 0x101) ^ (x * 0x1010100);
+      D0[sx] = (t << 24) | (t >>> 8); D1[sx] = (t << 16) | (t >>> 16); D2[sx] = (t << 8) | (t >>> 24); D3[sx] = t;
+      if (!x) { x = xi = 1; } else { x = x2 ^ d[d[d[x8 ^ x2]]]; xi ^= d[d[xi]]; }
+    }
+  })();
+
+  function expandKey(key) {
+    const nk = key.length / 4, nr = nk + 6, n = (nr + 1) * 4, w = new Uint32Array(n);
+    for (let i = 0; i < nk; i++) w[i] = (key[4 * i] << 24) | (key[4 * i + 1] << 16) | (key[4 * i + 2] << 8) | key[4 * i + 3];
+    const sub = t => (SB[t >>> 24] << 24) | (SB[(t >>> 16) & 255] << 16) | (SB[(t >>> 8) & 255] << 8) | SB[t & 255];
+    let rc = 1;
+    for (let i = nk; i < n; i++) {
+      let t = w[i - 1];
+      if (i % nk === 0) {
+        t = sub((t << 8) | (t >>> 24)) ^ (rc << 24);
+        rc = rc < 128 ? rc << 1 : (rc << 1) ^ 0x11b;
+      } else if (nk > 6 && i % nk === 4) t = sub(t);
+      w[i] = w[i - nk] ^ t;
+    }
+    return { w, nr };
+  }
+
+  function aesCbcEncrypt(key, iv, data) {
+    const { w, nr } = expandKey(key), out = new Uint8Array(data.length);
+    let p0 = (iv[0] << 24) | (iv[1] << 16) | (iv[2] << 8) | iv[3], p1 = (iv[4] << 24) | (iv[5] << 16) | (iv[6] << 8) | iv[7],
+      p2 = (iv[8] << 24) | (iv[9] << 16) | (iv[10] << 8) | iv[11], p3 = (iv[12] << 24) | (iv[13] << 16) | (iv[14] << 8) | iv[15];
+    for (let o = 0; o + 16 <= data.length; o += 16) {
+      let s0 = p0 ^ ((data[o] << 24) | (data[o + 1] << 16) | (data[o + 2] << 8) | data[o + 3]) ^ w[0],
+        s1 = p1 ^ ((data[o + 4] << 24) | (data[o + 5] << 16) | (data[o + 6] << 8) | data[o + 7]) ^ w[1],
+        s2 = p2 ^ ((data[o + 8] << 24) | (data[o + 9] << 16) | (data[o + 10] << 8) | data[o + 11]) ^ w[2],
+        s3 = p3 ^ ((data[o + 12] << 24) | (data[o + 13] << 16) | (data[o + 14] << 8) | data[o + 15]) ^ w[3];
+      let k = 4;
+      for (let r = 1; r < nr; r++) {
+        const t0 = T0[s0 >>> 24] ^ T1[(s1 >>> 16) & 255] ^ T2[(s2 >>> 8) & 255] ^ T3[s3 & 255] ^ w[k++];
+        const t1 = T0[s1 >>> 24] ^ T1[(s2 >>> 16) & 255] ^ T2[(s3 >>> 8) & 255] ^ T3[s0 & 255] ^ w[k++];
+        const t2 = T0[s2 >>> 24] ^ T1[(s3 >>> 16) & 255] ^ T2[(s0 >>> 8) & 255] ^ T3[s1 & 255] ^ w[k++];
+        const t3 = T0[s3 >>> 24] ^ T1[(s0 >>> 16) & 255] ^ T2[(s1 >>> 8) & 255] ^ T3[s2 & 255] ^ w[k++];
+        s0 = t0; s1 = t1; s2 = t2; s3 = t3;
+      }
+      p0 = ((SB[s0 >>> 24] << 24) | (SB[(s1 >>> 16) & 255] << 16) | (SB[(s2 >>> 8) & 255] << 8) | SB[s3 & 255]) ^ w[k++];
+      p1 = ((SB[s1 >>> 24] << 24) | (SB[(s2 >>> 16) & 255] << 16) | (SB[(s3 >>> 8) & 255] << 8) | SB[s0 & 255]) ^ w[k++];
+      p2 = ((SB[s2 >>> 24] << 24) | (SB[(s3 >>> 16) & 255] << 16) | (SB[(s0 >>> 8) & 255] << 8) | SB[s1 & 255]) ^ w[k++];
+      p3 = ((SB[s3 >>> 24] << 24) | (SB[(s0 >>> 16) & 255] << 16) | (SB[(s1 >>> 8) & 255] << 8) | SB[s2 & 255]) ^ w[k++];
+      out[o] = p0 >>> 24; out[o + 1] = p0 >>> 16; out[o + 2] = p0 >>> 8; out[o + 3] = p0;
+      out[o + 4] = p1 >>> 24; out[o + 5] = p1 >>> 16; out[o + 6] = p1 >>> 8; out[o + 7] = p1;
+      out[o + 8] = p2 >>> 24; out[o + 9] = p2 >>> 16; out[o + 10] = p2 >>> 8; out[o + 11] = p2;
+      out[o + 12] = p3 >>> 24; out[o + 13] = p3 >>> 16; out[o + 14] = p3 >>> 8; out[o + 15] = p3;
+    }
+    return out;
+  }
+
+  function aesCbcDecrypt(key, iv, data) {
+    const { w, nr } = expandKey(key), dk = new Uint32Array(w.length);
+    for (let r = 0; r <= nr; r++) {
+      for (let j = 0; j < 4; j++) {
+        const t = w[(nr - r) * 4 + j];
+        dk[r * 4 + j] = r === 0 || r === nr ? t : D0[SB[t >>> 24]] ^ D1[SB[(t >>> 16) & 255]] ^ D2[SB[(t >>> 8) & 255]] ^ D3[SB[t & 255]];
+      }
+    }
+    const blocks = Math.floor(data.length / 16), out = new Uint8Array(blocks * 16);
+    let p0 = (iv[0] << 24) | (iv[1] << 16) | (iv[2] << 8) | iv[3], p1 = (iv[4] << 24) | (iv[5] << 16) | (iv[6] << 8) | iv[7],
+      p2 = (iv[8] << 24) | (iv[9] << 16) | (iv[10] << 8) | iv[11], p3 = (iv[12] << 24) | (iv[13] << 16) | (iv[14] << 8) | iv[15];
+    for (let o = 0, end = blocks * 16; o < end; o += 16) {
+      const c0 = (data[o] << 24) | (data[o + 1] << 16) | (data[o + 2] << 8) | data[o + 3],
+        c1 = (data[o + 4] << 24) | (data[o + 5] << 16) | (data[o + 6] << 8) | data[o + 7],
+        c2 = (data[o + 8] << 24) | (data[o + 9] << 16) | (data[o + 10] << 8) | data[o + 11],
+        c3 = (data[o + 12] << 24) | (data[o + 13] << 16) | (data[o + 14] << 8) | data[o + 15];
+      let s0 = c0 ^ dk[0], s1 = c1 ^ dk[1], s2 = c2 ^ dk[2], s3 = c3 ^ dk[3], k = 4;
+      for (let r = 1; r < nr; r++) {
+        const t0 = D0[s0 >>> 24] ^ D1[(s3 >>> 16) & 255] ^ D2[(s2 >>> 8) & 255] ^ D3[s1 & 255] ^ dk[k++];
+        const t1 = D0[s1 >>> 24] ^ D1[(s0 >>> 16) & 255] ^ D2[(s3 >>> 8) & 255] ^ D3[s2 & 255] ^ dk[k++];
+        const t2 = D0[s2 >>> 24] ^ D1[(s1 >>> 16) & 255] ^ D2[(s0 >>> 8) & 255] ^ D3[s3 & 255] ^ dk[k++];
+        const t3 = D0[s3 >>> 24] ^ D1[(s2 >>> 16) & 255] ^ D2[(s1 >>> 8) & 255] ^ D3[s0 & 255] ^ dk[k++];
+        s0 = t0; s1 = t1; s2 = t2; s3 = t3;
+      }
+      const a = ((ISB[s0 >>> 24] << 24) | (ISB[(s3 >>> 16) & 255] << 16) | (ISB[(s2 >>> 8) & 255] << 8) | ISB[s1 & 255]) ^ dk[k++] ^ p0;
+      const b = ((ISB[s1 >>> 24] << 24) | (ISB[(s0 >>> 16) & 255] << 16) | (ISB[(s3 >>> 8) & 255] << 8) | ISB[s2 & 255]) ^ dk[k++] ^ p1;
+      const c = ((ISB[s2 >>> 24] << 24) | (ISB[(s1 >>> 16) & 255] << 16) | (ISB[(s0 >>> 8) & 255] << 8) | ISB[s3 & 255]) ^ dk[k++] ^ p2;
+      const d = ((ISB[s3 >>> 24] << 24) | (ISB[(s2 >>> 16) & 255] << 16) | (ISB[(s1 >>> 8) & 255] << 8) | ISB[s0 & 255]) ^ dk[k++] ^ p3;
+      out[o] = a >>> 24; out[o + 1] = a >>> 16; out[o + 2] = a >>> 8; out[o + 3] = a;
+      out[o + 4] = b >>> 24; out[o + 5] = b >>> 16; out[o + 6] = b >>> 8; out[o + 7] = b;
+      out[o + 8] = c >>> 24; out[o + 9] = c >>> 16; out[o + 10] = c >>> 8; out[o + 11] = c;
+      out[o + 12] = d >>> 24; out[o + 13] = d >>> 16; out[o + 14] = d >>> 8; out[o + 15] = d;
+      p0 = c0; p1 = c1; p2 = c2; p3 = c3;
+    }
+    return out;
+  }
+
+  const sha = async (alg, data) => new Uint8Array(await crypto.subtle.digest(alg, data));
+
+  /* R6 해시. ISO 32000-2 알고리즘 2.B */
+  async function hashR6(pw, salt, udata) {
+    let K = await sha('SHA-256', cat(pw, salt, udata));
+    for (let i = 0; ;) {
+      const unit = cat(pw, K, udata), K1 = new Uint8Array(unit.length * 64);
+      for (let j = 0; j < 64; j++) K1.set(unit, j * unit.length);
+      const E = aesCbcEncrypt(K.subarray(0, 16), K.subarray(16, 32), K1);
+      let m = 0;
+      for (let j = 0; j < 16; j++) m += E[j];
+      K = await sha(['SHA-256', 'SHA-384', 'SHA-512'][m % 3], E);
+      i++;
+      if (i >= 64 && E[E.length - 1] <= i - 32) break;
+    }
+    return K.subarray(0, 32);
+  }
+
+  /* ---------- 압축 해제: 교차참조 스트림과 객체 스트림을 읽을 때만 쓴다 ---------- */
+  const LBASE = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258];
+  const LEXT = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+  const DBASE = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577];
+  const DEXT = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+
+  function inflate(src) {
+    let pos = 2, bitBuf = 0, bitCnt = 0, out = new Uint8Array(Math.max(1024, src.length * 4)), n = 0;
+    const END = {};
+    const bits = need => {
+      let v = bitBuf;
+      while (bitCnt < need) {
+        if (pos >= src.length) throw END;
+        v |= src[pos++] << bitCnt;
+        bitCnt += 8;
+      }
+      bitBuf = v >>> need;
+      bitCnt -= need;
+      return v & ((1 << need) - 1);
+    };
+    const put = needed => {
+      if (n + needed <= out.length) return;
+      const g = new Uint8Array(Math.max(out.length * 2, n + needed));
+      g.set(out.subarray(0, n));
+      out = g;
+    };
+    const build = (lens, off, cnt) => {
+      const count = new Uint16Array(16), symbol = new Uint16Array(cnt), offs = new Uint16Array(16);
+      for (let i = 0; i < cnt; i++) count[lens[off + i]]++;
+      count[0] = 0;
+      for (let i = 1; i < 15; i++) offs[i + 1] = offs[i] + count[i];
+      for (let i = 0; i < cnt; i++) if (lens[off + i]) symbol[offs[lens[off + i]]++] = i;
+      return { count, symbol };
+    };
+    const decode = h => {
+      let code = 0, first = 0, index = 0;
+      for (let len = 1; len <= 15; len++) {
+        code |= bits(1);
+        const c = h.count[len];
+        if (code - c < first) return h.symbol[index + (code - first)];
+        index += c; first += c;
+        first <<= 1; code <<= 1;
+      }
+      throw new Error('압축 데이터 손상');
+    };
+    const codes = (lc, dc) => {
+      for (;;) {
+        let s = decode(lc);
+        if (s < 256) { put(1); out[n++] = s; }
+        else if (s === 256) return;
+        else {
+          s -= 257;
+          const len = LBASE[s] + bits(LEXT[s]);
+          const ds = decode(dc), dist = DBASE[ds] + bits(DEXT[ds]);
+          put(len);
+          for (let i = 0; i < len; i++) { out[n] = out[n - dist]; n++; }
+        }
+      }
+    };
+    let fixed = null;
+    try {
+      for (let last = 0; !last;) {
+        last = bits(1);
+        const type = bits(2);
+        if (type === 0) {
+          bitBuf = 0; bitCnt = 0;
+          const len = src[pos] | (src[pos + 1] << 8);
+          pos += 4;
+          put(len);
+          out.set(src.subarray(pos, pos + len), n);
+          n += len; pos += len;
+        } else if (type === 1) {
+          if (!fixed) {
+            const l = new Uint8Array(320);
+            l.fill(8, 0, 144); l.fill(9, 144, 256); l.fill(7, 256, 280); l.fill(8, 280, 288); l.fill(5, 288, 318);
+            fixed = [build(l, 0, 288), build(l, 288, 30)];
+          }
+          codes(fixed[0], fixed[1]);
+        } else if (type === 2) {
+          const nlen = bits(5) + 257, ndist = bits(5) + 1, ncode = bits(4) + 4;
+          const order = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+          const lens = new Uint8Array(320);
+          for (let i = 0; i < ncode; i++) lens[order[i]] = bits(3);
+          const cl = build(lens, 0, 19);
+          const ll = new Uint8Array(320);
+          for (let i = 0; i < nlen + ndist;) {
+            let s = decode(cl);
+            if (s < 16) { ll[i++] = s; continue; }
+            let prev = 0, rep;
+            if (s === 16) { prev = ll[i - 1]; rep = 3 + bits(2); }
+            else if (s === 17) rep = 3 + bits(3);
+            else rep = 11 + bits(7);
+            while (rep--) ll[i++] = prev;
+          }
+          codes(build(ll, 0, nlen), build(ll, nlen, ndist));
+        } else throw new Error('압축 데이터 손상');
+      }
+    } catch (e) {
+      if (e !== END) throw e; /* 뒤가 잘린 데이터는 읽은 만큼 쓴다 */
+    }
+    return out.subarray(0, n);
+  }
+
+  function unpredict(data, predictor, columns, colors, bpc) {
+    if (predictor < 10) return data;
+    const bpp = Math.max(1, (colors * bpc) >> 3), rowLen = Math.ceil(columns * colors * bpc / 8);
+    const rows = Math.floor(data.length / (rowLen + 1)), out = new Uint8Array(rows * rowLen);
+    for (let r = 0; r < rows; r++) {
+      const type = data[r * (rowLen + 1)], s = r * (rowLen + 1) + 1, d = r * rowLen;
+      for (let i = 0; i < rowLen; i++) {
+        const a = i >= bpp ? out[d + i - bpp] : 0, b = r ? out[d + i - rowLen] : 0, c = r && i >= bpp ? out[d + i - rowLen - bpp] : 0;
+        let p = 0;
+        if (type === 1) p = a;
+        else if (type === 2) p = b;
+        else if (type === 3) p = (a + b) >> 1;
+        else if (type === 4) {
+          const q = a + b - c, pa = Math.abs(q - a), pb = Math.abs(q - b), pc = Math.abs(q - c);
+          p = pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+        }
+        out[d + i] = data[s + i] + p;
+      }
+    }
+    return out;
+  }
+
+  /* ---------- PDF 문법 ---------- */
+  class Name { constructor(v) { this.v = v; } }
+  class Ref { constructor(num, gen) { this.num = num; this.gen = gen; } }
+  class Str { constructor(bytes, start, end) { this.bytes = bytes; this.start = start; this.end = end; this.skip = false; } }
+  class Dict extends Map { constructor() { super(); this.spans = {}; } }
+
+  const isWS = c => c === 32 || c === 10 || c === 13 || c === 9 || c === 12 || c === 0;
+  const isDelim = c => c === 40 || c === 41 || c === 60 || c === 62 || c === 91 || c === 93 || c === 123 || c === 125 || c === 47 || c === 37;
+  const isDigit = c => c >= 48 && c <= 57;
+  const hexVal = c => (c >= 48 && c <= 57 ? c - 48 : c >= 65 && c <= 70 ? c - 55 : c >= 97 && c <= 102 ? c - 87 : -1);
+
+  class Parser {
+    constructor(b, pos = 0) { this.b = b; this.pos = pos; this.strs = []; }
+    skip() {
+      const b = this.b;
+      for (; this.pos < b.length;) {
+        const c = b[this.pos];
+        if (isWS(c)) this.pos++;
+        else if (c === 37) { while (this.pos < b.length && b[this.pos] !== 10 && b[this.pos] !== 13) this.pos++; }
+        else break;
+      }
+    }
+    word() {
+      const b = this.b, s = this.pos;
+      while (this.pos < b.length && !isWS(b[this.pos]) && !isDelim(b[this.pos])) this.pos++;
+      return latin1(b.subarray(s, this.pos));
+    }
+    keyword(k) {
+      this.skip();
+      const p = ascii(k);
+      if (!eq(this.b.subarray(this.pos, this.pos + p.length), p, p.length)) return false;
+      this.pos += p.length;
+      return true;
+    }
+    int() {
+      this.skip();
+      const b = this.b, s = this.pos;
+      while (isDigit(b[this.pos])) this.pos++;
+      return this.pos > s ? parseInt(latin1(b.subarray(s, this.pos)), 10) : -1;
+    }
+    value() {
+      this.skip();
+      const b = this.b, c = b[this.pos];
+      if (this.pos >= b.length) return null;
+      if (c === 47) return this.name();
+      if (c === 40) return this.literal();
+      if (c === 60) return b[this.pos + 1] === 60 ? this.dict() : this.hex();
+      if (c === 91) {
+        this.pos++;
+        const arr = [];
+        for (;;) {
+          this.skip();
+          if (this.pos >= b.length) break;
+          if (b[this.pos] === 93) { this.pos++; break; }
+          if (b[this.pos] === 62 || b[this.pos] === 41) { this.pos++; continue; }
+          arr.push(this.value());
+        }
+        return arr;
+      }
+      if (isDigit(c) || c === 43 || c === 45 || c === 46) return this.number();
+      const w = this.word();
+      if (!w) { this.pos++; return null; }
+      if (w === 'true') return true;
+      if (w === 'false') return false;
+      return null;
+    }
+    number() {
+      const w = this.word(), n = parseFloat(w) || 0;
+      if (/^\d+$/.test(w)) {
+        const save = this.pos, gen = this.int();
+        if (gen >= 0) {
+          this.skip();
+          if (this.b[this.pos] === 82) {
+            const next = this.b[this.pos + 1];
+            if (next === undefined || isWS(next) || isDelim(next)) { this.pos++; return new Ref(n, gen); }
+          }
+        }
+        this.pos = save;
+      }
+      return n;
+    }
+    name() {
+      this.pos++;
+      const w = this.word();
+      return new Name(w.indexOf('#') < 0 ? w : w.replace(/#([0-9a-fA-F]{2})/g, (m, h) => String.fromCharCode(parseInt(h, 16))));
+    }
+    literal() {
+      const b = this.b, start = this.pos, out = [];
+      let depth = 1;
+      this.pos++;
+      while (this.pos < b.length && depth) {
+        let c = b[this.pos++];
+        if (c === 92) {
+          c = b[this.pos++];
+          if (c === 110) out.push(10);
+          else if (c === 114) out.push(13);
+          else if (c === 116) out.push(9);
+          else if (c === 98) out.push(8);
+          else if (c === 102) out.push(12);
+          else if (c >= 48 && c <= 55) {
+            let v = c - 48;
+            for (let i = 0; i < 2 && b[this.pos] >= 48 && b[this.pos] <= 55; i++) v = v * 8 + b[this.pos++] - 48;
+            out.push(v & 255);
+          } else if (c === 13) { if (b[this.pos] === 10) this.pos++; }
+          else if (c !== 10) out.push(c);
+        } else if (c === 40) { depth++; out.push(c); }
+        else if (c === 41) { if (--depth) out.push(c); }
+        else if (c === 13) { if (b[this.pos] === 10) this.pos++; out.push(10); }
+        else out.push(c);
+      }
+      const s = new Str(Uint8Array.from(out), start, this.pos);
+      this.strs.push(s);
+      return s;
+    }
+    hex() {
+      const b = this.b, start = this.pos, out = [];
+      let hi = -1;
+      this.pos++;
+      while (this.pos < b.length) {
+        const c = b[this.pos++];
+        if (c === 62) break;
+        const v = hexVal(c);
+        if (v < 0) continue;
+        if (hi < 0) hi = v;
+        else { out.push(hi * 16 + v); hi = -1; }
+      }
+      if (hi >= 0) out.push(hi * 16);
+      const s = new Str(Uint8Array.from(out), start, this.pos);
+      this.strs.push(s);
+      return s;
+    }
+    dict() {
+      const b = this.b, d = new Dict();
+      this.pos += 2;
+      for (;;) {
+        this.skip();
+        if (this.pos >= b.length) break;
+        if (b[this.pos] === 62) { this.pos += b[this.pos + 1] === 62 ? 2 : 1; break; }
+        if (b[this.pos] !== 47) {
+          const before = this.pos;
+          this.value();
+          if (this.pos === before) this.pos++;
+          continue;
+        }
+        const key = this.name().v;
+        this.skip();
+        const s = this.pos, v = this.value();
+        d.set(key, v);
+        d.spans[key] = [s, this.pos];
+      }
+      /* 전자서명의 /Contents는 암호화되지 않는다 */
+      if (d.has('ByteRange') && d.get('Contents') instanceof Str) d.get('Contents').skip = true;
+      return d;
+    }
+  }
+
+  /* ---------- 문서 ---------- */
+  const PAD = Uint8Array.from([0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41, 0x64, 0x00, 0x4e, 0x56, 0xff, 0xfa, 0x01, 0x08, 0x2e, 0x2e, 0x00, 0xb6, 0xd0, 0x68, 0x3e, 0x80, 0x2f, 0x0c, 0xa9, 0xfe, 0x64, 0x53, 0x69, 0x7a]);
+  const padPw = p => cat(p.subarray(0, 32), PAD).subarray(0, 32);
+  const nameOf = v => (v instanceof Name ? v.v : undefined);
+  const yieldToUI = () => new Promise(r => setTimeout(r));
+
+  class PDFError extends Error { constructor(code, msg) { super(msg); this.code = code; } }
+
+  class Doc {
+    constructor(bytes) {
+      this.b = bytes;
+      const h = indexOf(bytes, '%PDF-', 0, 1024);
+      if (h < 0) throw new PDFError('not-pdf', 'PDF 파일이 아닙니다.');
+      this.base = h;
+      this.entries = new Map();
+      this.trailer = new Map();
+      this.scanned = false;
+      this.scanStms = [];
+      let ok = false;
+      try { ok = this.readXrefChain() && this.verifyEntries(); } catch (e) { ok = false; }
+      if (!ok) this.rebuild();
+      if (!this.trailer.get('Root')) throw new PDFError('broken', '파일 구조가 손상돼 읽을 수 없습니다.');
+      this.encrypt = this.resolve(this.trailer.get('Encrypt'));
+      this.encryptRef = this.trailer.get('Encrypt') instanceof Ref ? this.trailer.get('Encrypt').num : -1;
+      this.key = null;
+    }
+    get encrypted() { return this.encrypt instanceof Map; }
+
+    mergeTrailer(d) { for (const [k, v] of d) if (!this.trailer.has(k)) this.trailer.set(k, v); }
+    readXrefChain() {
+      const sx = lastIndexOf(this.b, 'startxref');
+      if (sx < 0) return false;
+      const p = new Parser(this.b, sx + 9), queue = [p.int()], seen = new Set();
+      while (queue.length) {
+        const off = queue.shift();
+        if (off < 0 || seen.has(off)) continue;
+        seen.add(off);
+        const d = this.readXref(this.base + off);
+        if (!d) return false;
+        this.mergeTrailer(d);
+        if (typeof d.get('XRefStm') === 'number') queue.unshift(d.get('XRefStm'));
+        if (typeof d.get('Prev') === 'number') queue.push(d.get('Prev'));
+      }
+      this.trailer.delete('Prev'); this.trailer.delete('XRefStm');
+      return true;
+    }
+    readXref(pos) {
+      const p = new Parser(this.b, pos);
+      if (p.keyword('xref')) {
+        for (;;) {
+          if (p.keyword('trailer')) break;
+          const start = p.int(), count = p.int();
+          if (start < 0 || count < 0) return null;
+          for (let i = 0; i < count; i++) {
+            const off = p.int(), gen = p.int();
+            p.skip();
+            const t = this.b[p.pos++];
+            if (off < 0 || gen < 0 || (t !== 110 && t !== 102)) return null;
+            if (!this.entries.has(start + i)) this.entries.set(start + i, t === 110 ? { t: 1, off: this.base + off, gen } : { t: 0 });
+          }
+        }
+        const d = p.value();
+        return d instanceof Dict ? d : null;
+      }
+      const num = p.int(), gen = p.int();
+      if (num < 0 || gen < 0 || !p.keyword('obj')) return null;
+      const d = p.value();
+      if (!(d instanceof Dict) || nameOf(d.get('Type')) !== 'XRef') return null;
+      const raw = this.rawStream(p, d), data = this.unfilter(d, raw.data), W = d.get('W');
+      const Index = d.get('Index') || [0, d.get('Size')];
+      let o = 0;
+      const field = (w, def) => { if (!w) return def; let v = 0; for (let i = 0; i < w; i++) v = v * 256 + data[o++]; return v; };
+      for (let s = 0; s + 1 < Index.length; s += 2) {
+        for (let i = 0; i < Index[s + 1] && o < data.length; i++) {
+          const t = field(W[0], 1), a = field(W[1], 0), c = field(W[2], 0), n = Index[s] + i;
+          if (this.entries.has(n)) continue;
+          if (t === 1) this.entries.set(n, { t: 1, off: this.base + a, gen: c });
+          else if (t === 2) this.entries.set(n, { t: 2, stm: a, idx: c });
+          else this.entries.set(n, { t: 0 });
+        }
+      }
+      return d;
+    }
+    verifyEntries() {
+      for (const [n, e] of this.entries) {
+        if (e.t !== 1) continue;
+        const p = new Parser(this.b, e.off);
+        if (p.int() !== n || p.int() < 0 || !p.keyword('obj')) return false;
+      }
+      return this.entries.size > 0;
+    }
+    /* 교차참조표가 깨진 파일: 전체를 훑어 객체를 다시 찾는다 */
+    rebuild() {
+      this.entries = new Map();
+      this.trailer = new Map();
+      this.scanned = true;
+      const text = latin1(this.b), re = /(\d+)[ \t\r\n\f\0]+(\d+)[ \t\r\n\f\0]+obj\b/g, order = [];
+      let m;
+      while ((m = re.exec(text))) {
+        const n = +m[1];
+        this.entries.set(n, { t: 1, off: m.index, gen: +m[2] });
+        order.push(n);
+      }
+      const trailers = [];
+      for (let i = text.lastIndexOf('trailer'); i >= 0; i = i ? text.lastIndexOf('trailer', i - 1) : -1) {
+        const d = new Parser(this.b, i + 7).value();
+        if (d instanceof Dict) trailers.push(d);
+      }
+      const xrefs = [];
+      for (const n of new Set(order)) {
+        const e = this.entries.get(n), d = this.objectHead(e.off).value;
+        if (!(d instanceof Dict)) continue;
+        const type = nameOf(d.get('Type'));
+        if (type === 'XRef') xrefs.push(d);
+        else if (type === 'ObjStm') this.scanStms.push(n);
+        else if (type === 'Catalog' && !this.catalogGuess) this.catalogGuess = new Ref(n, e.gen);
+      }
+      for (const d of trailers) this.mergeTrailer(d);
+      for (const d of xrefs.reverse()) this.mergeTrailer(d);
+      if (!this.trailer.has('Root') && this.catalogGuess) this.trailer.set('Root', this.catalogGuess);
+      for (const k of ['Prev', 'XRefStm', 'W', 'Index', 'Type', 'Length', 'Filter', 'DecodeParms']) this.trailer.delete(k);
+    }
+    objectHead(off) {
+      const p = new Parser(this.b, off), num = p.int(), gen = p.int();
+      p.keyword('obj');
+      p.skip();
+      const bodyStart = p.pos;
+      let value = null;
+      try { value = p.value(); } catch (e) { value = null; }
+      return { p, num, gen, value, bodyStart };
+    }
+    resolve(v) {
+      for (let i = 0; v instanceof Ref && i < 16; i++) {
+        const e = this.entries.get(v.num);
+        v = e && e.t === 1 ? this.objectHead(e.off).value : null;
+      }
+      return v;
+    }
+    rawStream(p, dict) {
+      const b = this.b;
+      if (!p.keyword('stream')) return null;
+      if (b[p.pos] === 13 && b[p.pos + 1] === 10) p.pos += 2;
+      else if (b[p.pos] === 10 || b[p.pos] === 13) p.pos++;
+      const start = p.pos, len = this.resolve(dict.get('Length'));
+      if (typeof len === 'number' && len >= 0 && start + len <= b.length) {
+        const q = new Parser(b, start + len);
+        if (q.keyword('endstream')) return { start, data: b.subarray(start, start + len) };
+      }
+      let end = indexOf(b, 'endstream', start);
+      if (end < 0) end = b.length;
+      if (b[end - 1] === 10) end--;
+      if (b[end - 1] === 13) end--;
+      return { start, data: b.subarray(start, end) };
+    }
+    unfilter(dict, data) {
+      let f = this.resolve(dict.get('Filter'));
+      let parms = this.resolve(dict.get('DecodeParms') || dict.get('DP'));
+      f = f === null || f === undefined ? [] : Array.isArray(f) ? f : [f];
+      parms = Array.isArray(parms) ? parms : [parms];
+      f.forEach((flt, i) => {
+        const name = nameOf(this.resolve(flt));
+        if (name === 'Crypt') return;
+        if (name !== 'FlateDecode' && name !== 'Fl') throw new PDFError('broken', '지원하지 않는 압축 방식입니다: ' + name);
+        data = inflate(data);
+        const dp = this.resolve(parms[i]);
+        if (dp instanceof Map) {
+          const num = (k, def) => { const v = this.resolve(dp.get(k)); return typeof v === 'number' ? v : def; };
+          data = unpredict(data, num('Predictor', 1), num('Columns', 1), num('Colors', 1), num('BitsPerComponent', 8));
+        }
+      });
+      return data;
+    }
+
+    /* ---------- 암호 ---------- */
+    setupCipher() {
+      if (this.params) return this.params;
+      const E = this.encrypt, get = k => this.resolve(E.get(k));
+      if (nameOf(get('Filter')) !== 'Standard') throw new PDFError('unsupported', '인증서 기반 등 일반 암호가 아닌 보안 방식입니다.');
+      const V = get('V') || 0, R = get('R'), bytes = k => { const s = get(k); return s instanceof Str ? s.bytes : new Uint8Array(0); };
+      if (![1, 2, 4, 5].includes(V) || ![2, 3, 4, 5, 6].includes(R)) throw new PDFError('unsupported', '지원하지 않는 암호화 버전입니다.');
+      const encryptMetadata = get('EncryptMetadata') !== false;
+      let bits = get('Length'), stm = 'rc4', str = 'rc4', eff = 'rc4';
+      if (V >= 4) {
+        const CF = get('CF'), mode = n => {
+          if (!n || n === 'Identity') return 'none';
+          const f = CF instanceof Map ? this.resolve(CF.get(n)) : null, cfm = f instanceof Map ? nameOf(this.resolve(f.get('CFM'))) : null;
+          if (f instanceof Map && !bits) { const l = this.resolve(f.get('Length')); if (l) bits = l; }
+          return cfm === 'V2' ? 'rc4' : cfm === 'AESV2' ? 'aes' : cfm === 'AESV3' ? 'aes256' : 'none';
+        };
+        stm = mode(nameOf(get('StmF')));
+        str = mode(nameOf(get('StrF')));
+        eff = E.has('EFF') ? mode(nameOf(get('EFF'))) : stm;
+        if (!bits) bits = 128;
+      }
+      if (!bits) bits = 40;
+      if (bits < 40) bits *= 8;
+      const id = this.resolve(this.trailer.get('ID')), id0 = Array.isArray(id) && this.resolve(id[0]) instanceof Str ? this.resolve(id[0]).bytes : new Uint8Array(0);
+      this.params = { V, R, n: R === 2 ? 5 : Math.min(16, bits >> 3), O: bytes('O'), U: bytes('U'), OE: bytes('OE'), UE: bytes('UE'), P: get('P') | 0, id0, encryptMetadata, stm, str, eff };
+      return this.params;
+    }
+    legacyKey(pw) {
+      const { R, n, O, P, id0, encryptMetadata } = this.params, pb = Uint8Array.from([P & 255, (P >> 8) & 255, (P >> 16) & 255, (P >>> 24) & 255]);
+      let h = md5(cat(padPw(pw), O.subarray(0, 32), pb, id0, R >= 4 && !encryptMetadata ? Uint8Array.from([255, 255, 255, 255]) : new Uint8Array(0)));
+      if (R >= 3) for (let i = 0; i < 50; i++) h = md5(h.subarray(0, n));
+      return h.subarray(0, n);
+    }
+    checkUser(pw) {
+      const { R, U, id0 } = this.params, key = this.legacyKey(pw);
+      if (R === 2) return eq(rc4(key, PAD), U, 32) ? key : null;
+      let x = rc4(key, md5(cat(PAD, id0)));
+      for (let i = 1; i <= 19; i++) x = rc4(key.map(k => k ^ i), x);
+      return eq(x, U, 16) ? key : null;
+    }
+    checkOwner(pw) {
+      const { R, n, O } = this.params;
+      let h = md5(padPw(pw));
+      if (R >= 3) for (let i = 0; i < 50; i++) h = md5(h.subarray(0, n));
+      const key = h.subarray(0, n);
+      let user = O.subarray(0, 32);
+      if (R === 2) user = rc4(key, user);
+      else for (let i = 19; i >= 0; i--) user = rc4(key.map(k => k ^ i), user);
+      return this.checkUser(user);
+    }
+    async checkModern(pw) {
+      const { R, U, O, UE, OE } = this.params, zero = new Uint8Array(16), p = pw.subarray(0, 127), u48 = U.subarray(0, 48);
+      const hash = R === 6 ? hashR6 : (a, s, u) => sha('SHA-256', cat(a, s, u));
+      const none = new Uint8Array(0);
+      if (eq(await hash(p, U.subarray(32, 40), none), U, 32)) return aesCbcDecrypt(await hash(p, U.subarray(40, 48), none), zero, UE.subarray(0, 32));
+      if (eq(await hash(p, O.subarray(32, 40), u48), O, 32)) return aesCbcDecrypt(await hash(p, O.subarray(40, 48), u48), zero, OE.subarray(0, 32));
+      return null;
+    }
+    /* 맞는 암호면 true. 암호 문자열 하나를 가능한 인코딩으로 모두 시도한다 */
+    async tryPassword(password) {
+      const P = this.setupCipher();
+      if (P.R >= 5) {
+        const key = await this.checkModern(utf8(password.normalize('NFKC')));
+        if (key) this.key = key;
+        return !!key;
+      }
+      const forms = [];
+      if ([...password].every(c => c.charCodeAt(0) < 256)) forms.push(ascii(password));
+      if (/[^\x00-\x7f]/.test(password)) forms.push(utf8(password));
+      for (const f of forms) {
+        const key = this.checkUser(f) || this.checkOwner(f);
+        if (key) { this.key = key; return true; }
+      }
+      return false;
+    }
+    objectKey(num, gen, aes) {
+      const k = this.key, tail = [num & 255, (num >> 8) & 255, (num >> 16) & 255, gen & 255, (gen >> 8) & 255];
+      if (aes) tail.push(0x73, 0x41, 0x6c, 0x54);
+      return md5(cat(k, Uint8Array.from(tail))).subarray(0, Math.min(k.length + 5, 16));
+    }
+    decryptBytes(data, mode, num, gen) {
+      if (mode === 'none') return data;
+      if (mode === 'rc4') return rc4(this.objectKey(num, gen, false), data);
+      if (data.length < 32) return new Uint8Array(0);
+      const key = mode === 'aes256' ? this.key : this.objectKey(num, gen, true);
+      const out = aesCbcDecrypt(key, data.subarray(0, 16), data.subarray(16)), pad = out[out.length - 1];
+      return pad >= 1 && pad <= 16 ? out.subarray(0, out.length - pad) : out;
+    }
+    streamMode(dict) {
+      const P = this.params, type = nameOf(this.resolve(dict.get('Type')));
+      if (type === 'Metadata' && !P.encryptMetadata) return 'none';
+      let f = this.resolve(dict.get('Filter')), parms = this.resolve(dict.get('DecodeParms'));
+      f = Array.isArray(f) ? this.resolve(f[0]) : f;
+      parms = Array.isArray(parms) ? this.resolve(parms[0]) : parms;
+      if (nameOf(f) === 'Crypt') {
+        const n = parms instanceof Map ? nameOf(this.resolve(parms.get('Name'))) : null;
+        if (!n || n === 'Identity') return 'none';
+      }
+      return type === 'EmbeddedFile' ? P.eff : P.stm;
+    }
+
+    /* ---------- 해제본 쓰기 ---------- */
+    loadObjStm(num) {
+      const e = this.entries.get(num);
+      if (!e || e.t !== 1) throw new PDFError('broken', '객체 스트림을 찾을 수 없습니다.');
+      const { p, gen, value: d } = this.objectHead(e.off), raw = this.rawStream(p, d);
+      const data = this.unfilter(d, this.decryptBytes(raw.data, this.streamMode(d), num, gen));
+      const q = new Parser(data), N = this.resolve(d.get('N')), first = this.resolve(d.get('First')), heads = [], map = new Map();
+      for (let i = 0; i < N; i++) { const n = q.int(), off = q.int(); heads.push([n, off]); }
+      heads.forEach(([n, off], i) => {
+        map.set(n, data.subarray(first + off, i + 1 < N ? first + heads[i + 1][1] : data.length));
+      });
+      return map;
+    }
+    rewriteObject(num, e) {
+      const { p, gen, value: v, bodyStart } = this.objectHead(e.off), bodyEnd = p.pos, b = this.b;
+      if (v instanceof Dict) {
+        const type = nameOf(v.get('Type'));
+        if (type === 'XRef' || type === 'ObjStm' || v.has('Linearized')) return null;
+      }
+      const after = new Parser(b, p.pos);
+      after.skip();
+      const isStream = v instanceof Dict && indexOf(b, 'stream', after.pos, after.pos + 6) === after.pos;
+      const patches = [];
+      for (const s of p.strs) {
+        if (s.skip) continue;
+        const plain = this.decryptBytes(s.bytes, this.params.str, num, gen);
+        let hex = '<';
+        for (const c of plain) hex += (c < 16 ? '0' : '') + c.toString(16);
+        patches.push([s.start, s.end, ascii(hex + '>')]);
+      }
+      let data = null;
+      if (isStream) {
+        const raw = this.rawStream(after, v);
+        data = this.decryptBytes(raw.data, this.streamMode(v), num, gen);
+        const sp = v.spans.Length;
+        patches.push(sp ? [sp[0], sp[1], ascii(String(data.length))] : [bodyEnd - 2, bodyEnd - 2, ascii(`/Length ${data.length}`)]);
+      }
+      patches.sort((x, y) => x[0] - y[0]);
+      const parts = [ascii(`${num} ${gen} obj\n`)];
+      let at = bodyStart;
+      for (const [s, en, rep] of patches) {
+        if (s < at) continue; /* 중첩 범위 방어 */
+        parts.push(b.subarray(at, s), rep);
+        at = en;
+      }
+      parts.push(b.subarray(at, bodyEnd));
+      if (isStream) {
+        parts.push(ascii('\nstream\n'), data, ascii('\nendstream'));
+      }
+      parts.push(ascii('\nendobj\n'));
+      return { gen, parts };
+    }
+    async decrypt() {
+      if (this.scanned) {
+        for (const stm of this.scanStms) {
+          for (const n of this.loadObjStm(stm).keys()) {
+            const cur = this.entries.get(n);
+            if (!cur || cur.t !== 1) this.entries.set(n, { t: 2, stm });
+          }
+        }
+      }
+      const ver = latin1(this.b.subarray(this.base, this.base + 8)).replace(/[^%PDF0-9.\-]/g, '');
+      const out = [ascii(ver + '\n%'), Uint8Array.from([0xe2, 0xe3, 0xcf, 0xd3]), ascii('\n')];
+      let size = 0;
+      for (const c of out) size += c.length;
+      const nums = [...this.entries.keys()].sort((a, c) => a - c), written = new Map(), stms = new Map();
+      let work = 0;
+      const push = (num, gen, parts) => {
+        written.set(num, { off: size, gen });
+        for (const c of parts) { out.push(c); size += c.length; }
+      };
+      for (const num of nums) {
+        const e = this.entries.get(num);
+        if (e.t === 0 || num === this.encryptRef || num === 0) continue;
+        if (e.t === 1) {
+          const r = this.rewriteObject(num, e);
+          if (r) { push(num, r.gen, r.parts); for (const c of r.parts) work += c.length; }
+        } else {
+          if (!stms.has(e.stm)) stms.set(e.stm, this.loadObjStm(e.stm));
+          const body = stms.get(e.stm).get(num);
+          if (body) push(num, 0, [ascii(`${num} 0 obj\n`), body, ascii('\nendobj\n')]);
+        }
+        if ((work += 2048) > 8e6) { work = 0; await yieldToUI(); }
+      }
+      const xrefAt = size, kept = [...written.keys()].sort((a, c) => a - c), maxNum = kept.length ? kept[kept.length - 1] : 0;
+      let table = 'xref\n0 1\n0000000000 65535 f \n';
+      for (let i = 0; i < kept.length;) {
+        let j = i;
+        while (j + 1 < kept.length && kept[j + 1] === kept[j] + 1) j++;
+        table += `${kept[i]} ${j - i + 1}\n`;
+        for (let k = i; k <= j; k++) {
+          const w = written.get(kept[k]);
+          table += `${String(w.off).padStart(10, '0')} ${String(w.gen).padStart(5, '0')} n \n`;
+        }
+        i = j + 1;
+      }
+      const T = this.trailer, ref = k => { const v = T.get(k); return v instanceof Ref ? ` /${k} ${v.num} ${v.gen} R` : ''; };
+      const hexOf = v => { let s = '<'; for (const c of v.bytes) s += (c < 16 ? '0' : '') + c.toString(16); return s + '>'; };
+      const id = this.resolve(T.get('ID'));
+      const idText = Array.isArray(id) && id.length === 2 && id.every(x => x instanceof Str) ? ` /ID [${hexOf(id[0])} ${hexOf(id[1])}]` : '';
+      out.push(ascii(`${table}trailer\n<< /Size ${maxNum + 1}${ref('Root')}${ref('Info')}${idText} >>\nstartxref\n${xrefAt}\n%%EOF\n`));
+      return cat(...out);
+    }
+  }
+
+  /* 비밀번호 후보를 차례로 대입한다. 빈 암호(열람 암호 없이 권한만 잠긴 파일)를 먼저 시도한다.
+     결과: {status:'plain'|'unlocked'|'wrong', bytes, key} */
+  async function unlock(bytes, keys) {
+    const doc = new Doc(bytes);
+    if (!doc.encrypted) return { status: 'plain', bytes };
+    if (await doc.tryPassword('')) return { status: 'unlocked', bytes: await doc.decrypt(), key: null };
+    for (const k of keys) {
+      await yieldToUI();
+      if (await doc.tryPassword(k.pw)) return { status: 'unlocked', bytes: await doc.decrypt(), key: k };
+    }
+    return { status: 'wrong' };
+  }
+
+  return { unlock, PDFError, _test: { md5, rc4, aesCbcEncrypt, aesCbcDecrypt, inflate, hashR6 } };
+})();
+
+</script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const STORE = 'lecture-keyring-v1';
+  const ICON = {
+    closed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    open: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>'
+  };
+  const fmtSize = n => n < 1048576 ? `${Math.max(1, Math.round(n / 1024))}KB` : `${(n / 1048576).toFixed(1)}MB`;
+  const uid = () => Math.random().toString(36).slice(2, 10);
+
+  /* ---------- 열쇠 저장 ---------- */
+  let keys = [], storageOK = true;
+  try {
+    const raw = localStorage.getItem(STORE);
+    if (raw) keys = JSON.parse(raw).filter(k => k && typeof k.pw === 'string').map(k => ({ id: k.id || uid(), label: k.label || '', pw: k.pw, hits: k.hits || 0, used: k.used || 0 }));
+  } catch (e) { storageOK = false; }
+  function persist() {
+    try { localStorage.setItem(STORE, JSON.stringify(keys)); storageOK = true; }
+    catch (e) {
+      storageOK = false;
+      $('privacy').textContent = '이 화면에서는 열쇠를 저장할 수 없어 창을 닫으면 사라집니다. 백업 파일을 저장해 두세요.';
+    }
+  }
+  const orderedKeys = () => [...keys].sort((a, b) => b.used - a.used);
+
+  function addKey(label, pw) {
+    if (keys.some(k => k.pw === pw)) return false;
+    keys.push({ id: uid(), label, pw, hits: 0, used: 0 });
+    return true;
+  }
+
+  /* ---------- 파일 처리 ---------- */
+  let items = [], running = false;
+
+  function addFiles(list) {
+    const files = [...list];
+    if (!files.length) return;
+    for (const file of files) {
+      const item = { id: uid(), file, name: file.name, size: file.size, status: 'queued', msg: '', key: null, free: false, out: null };
+      if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { item.status = 'error'; item.msg = 'PDF 파일이 아닙니다.'; }
+      items.push(item);
+    }
+    render();
+    pump();
+  }
+
+  async function pump() {
+    if (running) return;
+    running = true;
+    for (;;) {
+      const item = items.find(i => i.status === 'queued');
+      if (!item) break;
+      item.status = 'working';
+      render();
+      await new Promise(r => setTimeout(r));
+      try {
+        const bytes = new Uint8Array(await item.file.arrayBuffer());
+        const r = await PDFUnlock.unlock(bytes, orderedKeys());
+        if (!items.includes(item)) continue;
+        if (r.status === 'plain') { item.status = 'plain'; item.out = bytes; }
+        else if (r.status === 'wrong') item.status = 'wrong';
+        else {
+          item.status = 'done';
+          item.out = r.bytes;
+          item.free = !r.key;
+          if (r.key) {
+            item.key = r.key.label || '이름 없는 열쇠';
+            r.key.hits++;
+            r.key.used = Date.now();
+            persist();
+          }
+        }
+      } catch (e) {
+        item.status = 'error';
+        item.msg = e && e.code ? e.message : '파일을 처리하지 못했습니다. 파일이 손상됐을 수 있습니다.';
+        if (!(e && e.code)) console.error(e);
+      }
+      render();
+    }
+    running = false;
+    render();
+  }
+
+  function retryWrong() {
+    let any = false;
+    for (const i of items) if (i.status === 'wrong') { i.status = 'queued'; any = true; }
+    if (any) pump();
+  }
+
+  /* ---------- ZIP (PDF는 이미 압축돼 있어 무압축 저장) ---------- */
+  const CRC = new Int32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; CRC[n] = c; }
+  const crc32 = b => { let c = -1; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0; };
+  function makeZip(files) {
+    const enc = new TextEncoder(), parts = [], central = [], d = new Date();
+    const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+    const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+    let off = 0;
+    const head = (size, fill) => { const a = new Uint8Array(size); fill(new DataView(a.buffer)); return a; };
+    for (const f of files) {
+      const name = enc.encode(f.name), crc = crc32(f.data), n = f.data.length;
+      const common = (v, o) => {
+        v.setUint16(o, 20, true); v.setUint16(o + 2, 0x0800, true); v.setUint16(o + 4, 0, true);
+        v.setUint16(o + 6, time, true); v.setUint16(o + 8, date, true); v.setUint32(o + 10, crc, true);
+        v.setUint32(o + 14, n, true); v.setUint32(o + 18, n, true); v.setUint16(o + 22, name.length, true);
+      };
+      const lh = head(30, v => { v.setUint32(0, 0x04034b50, true); common(v, 4); });
+      const ch = head(46, v => { v.setUint32(0, 0x02014b50, true); v.setUint16(4, 20, true); common(v, 6); v.setUint32(42, off, true); });
+      parts.push(lh, name, f.data);
+      central.push(ch, name);
+      off += lh.length + name.length + n;
+    }
+    let size = 0;
+    for (const c of central) size += c.length;
+    const end = head(22, v => {
+      v.setUint32(0, 0x06054b50, true); v.setUint16(8, files.length, true); v.setUint16(10, files.length, true);
+      v.setUint32(12, size, true); v.setUint32(16, off, true);
+    });
+    return new Blob([...parts, ...central, end], { type: 'application/zip' });
+  }
+
+  /* ---------- 저장 ---------- */
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
+  }
+  async function saveFile(filename, data) {
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    if (window.claude) {
+      const dl = await window.claude.use('downloads');
+      if (!dl) { toast('이 화면에서는 파일을 저장할 수 없습니다. claude.ai에서 열어 주세요.'); return; }
+      try {
+        await dl.save({ filename, data: blob });
+        toast('저장했습니다.');
+      } catch (e) {
+        if (e && e.code === 'declined') return;
+        toast(e && e.code === 'rate_limited' ? '저장 확인 창이 열려 있습니다. 먼저 처리해 주세요.' : '저장하지 못했습니다. 다시 시도해 주세요.');
+      }
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.append(a);
+    a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(a.href); }, 60000);
+    toast('저장했습니다.');
+  }
+  const unlockedName = item => item.status === 'plain' ? item.name : item.name.replace(/\.pdf$/i, '') + '_해제.pdf';
+  const saveable = () => items.filter(i => i.out);
+
+  async function saveAll() {
+    const list = saveable();
+    if (list.length === 1) return saveFile(unlockedName(list[0]), list[0].out);
+    const seen = new Map(), files = list.map(i => {
+      let name = unlockedName(i);
+      const c = (seen.get(name) || 0) + 1;
+      seen.set(name, c);
+      if (c > 1) name = name.replace(/\.pdf$/i, ` (${c}).pdf`);
+      return { name, data: i.out };
+    });
+    const d = new Date(), stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+    await saveFile(`강의자료_해제_${stamp}.zip`, makeZip(files));
+  }
+
+  /* ---------- 화면 ---------- */
+  function makeRow(state, name, size, text, strong, opts = {}) {
+    const li = document.createElement('li');
+    li.className = 'row' + (opts.sample ? ' sample' : '');
+    li.dataset.s = state;
+    const lock = document.createElement('div');
+    lock.className = 'lock';
+    lock.innerHTML = state === 'done' || state === 'plain' ? ICON.open : ICON.closed;
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const fn = document.createElement('div');
+    fn.className = 'fname';
+    fn.textContent = name;
+    const st = document.createElement('div');
+    st.className = 'state';
+    if (strong) { const b = document.createElement('b'); b.textContent = strong; st.append(b, text ? ' · ' : ''); }
+    st.append(text + (size ? ` · ${fmtSize(size)}` : ''));
+    meta.append(fn, st);
+    const acts = document.createElement('div');
+    acts.className = 'acts';
+    li.append(lock, meta, acts);
+    return { li, acts };
+  }
+  function exampleRows() {
+    const r = [
+      ['done', '운영체제_7주차.pdf', 3355443, '운영체제 열쇠로 열림', '해제됨'],
+      ['done', '데이터베이스_중간정리.pdf', 1887436, '데이터베이스 열쇠로 열림', '해제됨'],
+      ['wrong', '컴퓨터구조_3장.pdf', 6081740, '열쇠함에 암호를 추가하면 자동으로 다시 시도합니다', '맞는 열쇠 없음']
+    ];
+    return r.map(a => {
+      const { li, acts } = makeRow(...a, { sample: true });
+      const c = document.createElement('span');
+      c.className = 'chip';
+      c.textContent = '예시';
+      acts.append(c);
+      return li;
+    });
+  }
+  function describe(i) {
+    switch (i.status) {
+      case 'queued': return ['대기 중', ''];
+      case 'working': return ['암호를 대입하는 중', ''];
+      case 'done': return i.free ? ['열람 암호가 없어 바로 열림', '해제됨'] : [`${i.key} 열쇠로 열림`, '해제됨'];
+      case 'plain': return ['원래 잠겨 있지 않은 파일', ''];
+      case 'wrong': return ['열쇠함에 암호를 추가하면 자동으로 다시 시도합니다', '맞는 열쇠 없음'];
+      default: return [i.msg, '처리 실패'];
+    }
+  }
+  function render() {
+    const rows = $('rows');
+    rows.replaceChildren();
+    $('exampleNote').hidden = items.length > 0;
+    $('trayHead').hidden = items.length === 0;
+    if (!items.length) rows.append(...exampleRows());
+    for (const i of items) {
+      const [text, strong] = describe(i), { li, acts } = makeRow(i.status, i.name, i.size, text, strong);
+      if (i.out) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = '저장';
+        b.setAttribute('aria-label', `${i.name} 저장`);
+        b.onclick = () => saveFile(unlockedName(i), i.out);
+        acts.append(b);
+      }
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.textContent = '빼기';
+      x.setAttribute('aria-label', `${i.name} 목록에서 빼기`);
+      x.onclick = () => { items = items.filter(o => o !== i); render(); };
+      acts.append(x);
+      rows.append(li);
+    }
+    const done = items.filter(i => i.status === 'done').length, n = items.length, s = saveable().length;
+    const busy = items.some(i => i.status === 'queued' || i.status === 'working');
+    $('tally').textContent = busy ? `${n}개 중 ${items.filter(i => !['queued', 'working'].includes(i.status)).length}개 처리됨` : `${n}개 중 ${done}개 해제`;
+    const all = $('saveAll');
+    all.textContent = s > 1 ? `전체 저장 (ZIP ${s}개)` : '저장';
+    all.hidden = s === 0;
+    all.disabled = busy;
+  }
+  function renderKeys() {
+    const tags = $('tags');
+    tags.replaceChildren();
+    $('noKeys').hidden = keys.length > 0;
+    tags.hidden = keys.length === 0;
+    $('keyCount').textContent = keys.length ? `${keys.length}개` : '';
+    for (const k of keys) {
+      const li = document.createElement('li');
+      li.className = 'tag';
+      const top = document.createElement('div');
+      top.className = 'tag-top';
+      const nm = document.createElement('span');
+      nm.className = 'tag-name';
+      nm.textContent = k.label || '이름 없는 열쇠';
+      const hits = document.createElement('span');
+      hits.className = 'tag-hits';
+      hits.textContent = k.hits ? `${k.hits}번 사용` : '';
+      top.append(nm, hits);
+      const pw = document.createElement('div');
+      pw.className = 'tag-pw';
+      const mask = '•'.repeat(Math.min(k.pw.length, 12));
+      pw.textContent = mask;
+      const row = document.createElement('div');
+      row.className = 'tag-acts';
+      const show = document.createElement('button');
+      show.type = 'button';
+      show.className = 'link';
+      show.textContent = '암호 보기';
+      show.onclick = () => {
+        const on = pw.textContent === mask;
+        pw.textContent = on ? k.pw : mask;
+        show.textContent = on ? '가리기' : '암호 보기';
+      };
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'link';
+      del.textContent = '삭제';
+      let armed = 0;
+      del.onclick = () => {
+        if (!armed) {
+          del.textContent = '한 번 더 누르면 삭제';
+          del.classList.add('armed');
+          armed = setTimeout(() => { armed = 0; del.textContent = '삭제'; del.classList.remove('armed'); }, 3000);
+          return;
+        }
+        clearTimeout(armed);
+        keys = keys.filter(o => o !== k);
+        persist();
+        renderKeys();
+      };
+      row.append(show, del);
+      li.append(top, pw, row);
+      tags.append(li);
+    }
+  }
+
+  /* ---------- 입력 ---------- */
+  $('keyForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const pw = $('kPw').value, msg = $('formMsg');
+    msg.hidden = true;
+    if (!pw) { msg.textContent = '암호를 입력해 주세요.'; msg.hidden = false; $('kPw').focus(); return; }
+    if (!addKey($('kLabel').value.trim(), pw)) { msg.textContent = '이미 등록된 암호입니다.'; msg.hidden = false; return; }
+    $('kLabel').value = '';
+    $('kPw').value = '';
+    persist();
+    renderKeys();
+    retryWrong();
+    $('kLabel').focus();
+  });
+  $('pick').onclick = () => $('file').click();
+  $('file').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+  $('saveAll').onclick = saveAll;
+  $('clear').onclick = () => { items = []; render(); };
+  const drop = $('drop');
+  let depth = 0;
+  document.addEventListener('dragenter', e => { e.preventDefault(); depth++; drop.classList.add('over'); });
+  document.addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; drop.classList.remove('over'); } });
+  document.addEventListener('dragover', e => e.preventDefault());
+  document.addEventListener('drop', e => {
+    e.preventDefault();
+    depth = 0;
+    drop.classList.remove('over');
+    addFiles(e.dataTransfer.files);
+  });
+  $('backup').onclick = () => {
+    if (!keys.length) { toast('백업할 열쇠가 없습니다.'); return; }
+    saveFile('강의자료_열쇠함_백업.json', JSON.stringify({ keys: keys.map(k => ({ label: k.label, pw: k.pw })) }, null, 2));
+  };
+  $('restore').onclick = () => $('restoreFile').click();
+  $('restoreFile').onchange = async e => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      let n = 0;
+      for (const k of data.keys) if (typeof k.pw === 'string' && k.pw && addKey(String(k.label || ''), k.pw)) n++;
+      persist();
+      renderKeys();
+      retryWrong();
+      toast(n ? `열쇠 ${n}개를 불러왔습니다.` : '새로 추가할 열쇠가 없습니다.');
+    } catch (err) { toast('백업 파일을 읽지 못했습니다. 열쇠함에서 저장한 파일인지 확인해 주세요.'); }
+  };
+
+  render();
+  renderKeys();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+</script>
+</body>
+</html>
