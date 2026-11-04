@@ -105,7 +105,20 @@ input#kPw { font-family: var(--mono); }
 .ring-foot div { display: flex; gap: 14px; flex-wrap: wrap; }
 .ring-foot .link { color: var(--accent); }
 .fine { color: var(--muted); font-size: 12.5px; margin: 0; }
-#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-weight: 500; max-width: calc(100vw - 32px); }
+.pop-scrim { position: fixed; inset: 0; background: rgba(6, 14, 20, .5); z-index: 20; }
+.pop { position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 21;
+  width: min(580px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: 0 12px 36px rgba(6, 14, 20, .35); }
+.pop:focus { outline: none; }
+.pop-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.pop-head h2 { font: 400 22px/1.2 var(--display); margin: 0; }
+.pop-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; overflow-y: auto; align-content: start; }
+.pop-item { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; }
+.pop-item .fname { flex: 1 1 200px; min-width: 0; }
+.pop-item .acts { flex: none; }
+.pop-foot { display: grid; gap: 10px; }
+.pop-foot button { justify-self: end; }
+#toast { z-index: 30; position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-weight: 500; max-width: calc(100vw - 32px); }
 @media (max-width: 820px) {
   .board { grid-template-columns: minmax(0, 1fr); }
   h1 { font-size: 30px; }
@@ -158,6 +171,18 @@ input#kPw { font-family: var(--mono); }
         <p class="fine" id="privacy">PDF와 암호는 이 브라우저 안에서만 처리되고 밖으로 전송되지 않습니다. 열쇠는 이 기기의 이 브라우저에 저장되므로, 다른 기기에서는 백업 파일을 불러오세요. 백업 파일에는 암호가 그대로 들어 있습니다.</p>
       </div>
     </aside>
+  </div>
+</div>
+<div id="scrim" class="pop-scrim" hidden></div>
+<div id="pop" class="pop" role="dialog" aria-modal="true" aria-labelledby="popTitle" tabindex="-1" hidden>
+  <div class="pop-head">
+    <h2 id="popTitle"></h2>
+    <button id="popClose" type="button">닫기</button>
+  </div>
+  <ul class="pop-list" id="popList"></ul>
+  <div class="pop-foot">
+    <p class="fine" id="popHint" hidden>앱으로 열기를 누르면 앱 선택 창이 뜹니다. 목록에는 공유로 PDF를 받을 수 있는 앱이 표시됩니다.</p>
+    <button id="popSaveAll" type="button" hidden></button>
   </div>
 </div>
 <div id="toast" role="status" hidden></div>
@@ -1130,6 +1155,9 @@ const PDFUnlock = (() => {
     }
     running = false;
     render();
+    const fresh = items.filter(i => i.status === 'done' && !i.announced);
+    fresh.forEach(i => { i.announced = true; });
+    if (fresh.length) showPop(fresh);
   }
 
   function retryWrong() {
@@ -1204,6 +1232,66 @@ const PDFUnlock = (() => {
   const unlockedName = item => item.status === 'plain' ? item.name : item.name.replace(/\.pdf$/i, '') + '_해제.pdf';
   const saveable = () => items.filter(i => i.out);
 
+  /* 다른 앱으로 열기: 웹앱은 Android 공유 창을 통해서만 파일을 넘길 수 있다 */
+  const pdfFile = i => new File([i.out], unlockedName(i), { type: 'application/pdf' });
+  const canOpenApp = (() => {
+    if (window.claude || !navigator.canShare || !navigator.share) return false;
+    try { return navigator.canShare({ files: [new File(['x'], 'a.pdf', { type: 'application/pdf' })] }); }
+    catch (e) { return false; }
+  })();
+  async function openInApp(i) {
+    try {
+      const file = pdfFile(i);
+      if (!navigator.canShare({ files: [file] })) throw new Error('unsupported');
+      await navigator.share({ files: [file] });
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      toast('앱으로 보내지 못했습니다. 저장한 뒤 내 파일 앱에서 열어 주세요.');
+    }
+  }
+  function actionButtons(i, parent) {
+    if (canOpenApp) {
+      const o = document.createElement('button');
+      o.type = 'button';
+      o.className = 'primary';
+      o.textContent = '앱으로 열기';
+      o.setAttribute('aria-label', `${i.name} 앱으로 열기`);
+      o.onclick = () => openInApp(i);
+      parent.append(o);
+    }
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '저장';
+    b.setAttribute('aria-label', `${i.name} 저장`);
+    b.onclick = () => saveFile(unlockedName(i), i.out);
+    parent.append(b);
+  }
+  function closePop() { $('pop').hidden = true; $('scrim').hidden = true; }
+  function showPop(list) {
+    $('popTitle').textContent = list.length > 1 ? `${list.length}개 잠금 해제 완료` : '잠금 해제 완료';
+    const ul = $('popList');
+    ul.replaceChildren();
+    for (const i of list) {
+      const li = document.createElement('li');
+      li.className = 'pop-item';
+      const n = document.createElement('div');
+      n.className = 'fname';
+      n.textContent = i.name;
+      const acts = document.createElement('div');
+      acts.className = 'acts';
+      actionButtons(i, acts);
+      li.append(n, acts);
+      ul.append(li);
+    }
+    $('popHint').hidden = !canOpenApp;
+    const all = $('popSaveAll'), s = saveable().length;
+    all.hidden = s < 2;
+    all.textContent = `전체 저장 (ZIP ${s}개)`;
+    $('scrim').hidden = false;
+    $('pop').hidden = false;
+    $('pop').focus();
+  }
+
   async function saveAll() {
     const list = saveable();
     if (list.length === 1) return saveFile(unlockedName(list[0]), list[0].out);
@@ -1274,14 +1362,7 @@ const PDFUnlock = (() => {
     if (!items.length) rows.append(...exampleRows());
     for (const i of items) {
       const [text, strong] = describe(i), { li, acts } = makeRow(i.status, i.name, i.size, text, strong);
-      if (i.out) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.textContent = '저장';
-        b.setAttribute('aria-label', `${i.name} 저장`);
-        b.onclick = () => saveFile(unlockedName(i), i.out);
-        acts.append(b);
-      }
+      if (i.out) actionButtons(i, acts);
       const x = document.createElement('button');
       x.type = 'button';
       x.textContent = '빼기';
@@ -1371,6 +1452,10 @@ const PDFUnlock = (() => {
   $('pick').onclick = () => $('file').click();
   $('file').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
   $('saveAll').onclick = saveAll;
+  $('popSaveAll').onclick = saveAll;
+  $('popClose').onclick = closePop;
+  $('scrim').onclick = closePop;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
   $('clear').onclick = () => { items = []; render(); };
   const drop = $('drop');
   let depth = 0;
